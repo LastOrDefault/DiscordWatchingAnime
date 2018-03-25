@@ -1,34 +1,30 @@
 ﻿using DiscordRPC;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace DiscordWatchingAnime
 {
-    public partial class Form1 : Form
+    public class NotifyIconContext: ApplicationContext
     {
-        public Form1()
-        {
-            InitializeComponent();
-        }
 
-        private void Form1_Load(object sender, EventArgs e)
+        public NotifyIconContext()
         {
-            // MenuItem configMenuItem = new MenuItem("Configuration", new EventHandler(ShowConfig));
+            //MenuItem configMenuItem = new MenuItem("Configuration", new EventHandler(ShowConfig));
             //MenuItem exitMenuItem = new MenuItem("Exit", new EventHandler(Exit));
 
             NotifyIcon notifyIcon = new NotifyIcon();
-            notifyIcon.Icon = DiscordWatchingAnime.Properties.Resources.AppIcon;
+            //notifyIcon.Icon = TaskTrayApplication.Properties.Resources.AppIcon;
             //notifyIcon.ContextMenu = new ContextMenu(new MenuItem[]
-            //  { configMenuItem, exitMenuItem });
+              //  { configMenuItem, exitMenuItem });
             notifyIcon.Visible = true;
 
 
@@ -52,6 +48,8 @@ namespace DiscordWatchingAnime
                 //CommandInterface(client);
                 PollInterface(client);
             }
+
+
             /*
             System.Timers.Timer timer = new System.Timers.Timer();
             timer.Elapsed += Timer_Elapsed;
@@ -78,13 +76,10 @@ namespace DiscordWatchingAnime
                     {
                         if (p.MainWindowTitle.EndsWith(" – Opera"))
                         {
-                            var s = p.MainWindowTitle.Replace(" – Opera", "");
-                            if (s.Contains("Crunchyroll - Watch "))
-                            {
-                                var c = client.CurrentPresence;
-                                c.Details = s.Replace("Crunchyroll - Watch ", "");
-                                client.SetPresence(c);
-                            }
+                            //var m = Regex.Match(p.MainWindowTitle, @"(.+) - Opera");
+                            var c = client.CurrentPresence;
+                            c.Details = p.MainWindowTitle.Replace(" – Opera", "");
+                            client.SetPresence(c);
                         }
                     }
                 }
@@ -95,7 +90,20 @@ namespace DiscordWatchingAnime
 
                 //This can be what ever value you want, as long as it is faster than 30 seconds.
                 //Console.Write("+");
-                Thread.Sleep(10000);
+                Thread.Sleep(1000);
+            }
+    }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+
+            Process[] processes = Process.GetProcesses();
+            foreach (Process p in processes)
+            {
+                if (!String.IsNullOrEmpty(p.MainWindowTitle))
+                {
+                    Debug.WriteLine(p.MainWindowTitle);
+                }
             }
         }
     }
