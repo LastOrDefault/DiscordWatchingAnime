@@ -7,14 +7,20 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows.Forms;
 
 namespace DiscordWatchingAnime
 {
     public partial class Form1 : Form
     {
+        private DiscordRpcClient client;
+        private List<Browser> browsers = new List<Browser>();
+        private List<StreamingService> streams = new List<StreamingService>();
+
         public Form1()
         {
             InitializeComponent();
@@ -22,13 +28,22 @@ namespace DiscordWatchingAnime
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            browsers.Add(new Browser() { Name = "Opera", Regex = "(.+) – Opera" });
+
+            streams.Add(new StreamingService() { Name = "Crunchyroll", Regex = "Crunchyroll - Watch (.+) Folge.+", Icon="cr" });
+            streams.Add(new StreamingService() { Name = "Anime on Demand", Regex = "(.+) bei Anime on Demand online schauen", Icon="aod" });
+            streams.Add(new StreamingService() { Name = "Wakanim", Regex = ".+ - (.+) auf Wakanim.TV !", Icon="wa" });
+
+
             // MenuItem configMenuItem = new MenuItem("Configuration", new EventHandler(ShowConfig));
             //MenuItem exitMenuItem = new MenuItem("Exit", new EventHandler(Exit));
 
             NotifyIcon notifyIcon = new NotifyIcon();
-            notifyIcon.Icon = DiscordWatchingAnime.Properties.Resources.AppIcon;
-            //notifyIcon.ContextMenu = new ContextMenu(new MenuItem[]
-            //  { configMenuItem, exitMenuItem });
+            MenuItem item = new MenuItem("Close");
+            item.Click += Item_Click;
+            notifyIcon.Icon = Properties.Resources.AppIcon;
+            notifyIcon.ContextMenu = new ContextMenu(new MenuItem[]
+              { item });
             notifyIcon.Visible = true;
 
 
@@ -36,9 +51,10 @@ namespace DiscordWatchingAnime
             {
                 Details = "TestDetails",
                 State = "TestState",
+                Assets = new Assets()
             };
 
-            using (DiscordRpcClient client = new DiscordRpcClient("427501855191334924", true, 0))
+            using (client = new DiscordRpcClient("427501855191334924", true, 0))
             {
                 //Set the loggers
                 client.Logger = new DiscordRPC.Logging.ConsoleLogger() { Level = DiscordRPC.Logging.LogLevel.Info };
@@ -50,8 +66,9 @@ namespace DiscordWatchingAnime
                 client.SetPresence(presence);
 
                 //CommandInterface(client);
-                PollInterface(client);
+                PollInterface();
             }
+
             /*
             System.Timers.Timer timer = new System.Timers.Timer();
             timer.Elapsed += Timer_Elapsed;
@@ -60,8 +77,25 @@ namespace DiscordWatchingAnime
             */
         }
 
-        private void PollInterface(DiscordRpcClient client)
+        private void Item_Click(object sender, EventArgs e)
         {
+            client.Dispose();
+        }
+
+        private void Timer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+
+        }
+
+        private void Client_OnSpectate(object sender, DiscordRPC.Message.SpectateMessage args)
+        {
+            Debug.WriteLine(args.Secret);
+            Process.Start(args.Secret);
+        }
+
+        private void PollInterface()
+        {
+
             while (true)
             {
                 //Invoke the clients events
@@ -76,26 +110,30 @@ namespace DiscordWatchingAnime
                 {
                     if (!String.IsNullOrEmpty(p.MainWindowTitle))
                     {
-                        if (p.MainWindowTitle.EndsWith(" – Opera"))
+                        foreach (var browser in browsers)
                         {
-                            var s = p.MainWindowTitle.Replace(" – Opera", "");
-                            if (s.Contains("Crunchyroll - Watch "))
+                            Regex browserRegex = new Regex(browser.Regex);
+                            if (browserRegex.IsMatch(p.MainWindowTitle))
                             {
-                                var c = client.CurrentPresence;
-                                c.Details = s.Replace("Crunchyroll - Watch ", "");
-                                client.SetPresence(c);
+                                var s = browserRegex.Match(p.MainWindowTitle).Groups[1].Value;
+                                foreach (var st in streams)
+                                {
+                                    Regex streamRegex = new Regex(st.Regex);
+                                    if (streamRegex.IsMatch(s))
+                                    {
+                                        var c = client.CurrentPresence;
+                                        //var test = streamRegex.Match(s);
+                                        c.Details = streamRegex.Match(s).Groups[1].Value;
+                                        c.State = st.Name;
+                                        c.Assets.LargeImageKey = st.Icon;
+                                        //c.Secrets.SpectateSecret = "http://" + s.Replace("Crunchyroll - Watch ", "");
+                                        client.SetPresence(c);
+                                    }
+                                }
                             }
                         }
                     }
                 }
-
-                // var p = client.CurrentPresence;
-                //p.Details = "Tiesjgkldjg kldr";
-                //client.SetPresence(p);
-
-                //This can be what ever value you want, as long as it is faster than 30 seconds.
-                //Console.Write("+");
-                Thread.Sleep(10000);
             }
         }
     }
