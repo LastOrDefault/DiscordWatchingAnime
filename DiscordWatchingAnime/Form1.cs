@@ -29,6 +29,8 @@ namespace DiscordWatchingAnime
         private void Form1_Load(object sender, EventArgs e)
         {
             browsers.Add(new Browser() { Name = "Opera", Regex = "(.+) – Opera" });
+            browsers.Add(new Browser() { Name = "Chrome", Regex = "(.+) - Google Chrome" });
+            browsers.Add(new Browser() { Name = "Firefox", Regex = "(.+) - Mozilla Firefox" });
 
             streams.Add(new StreamingService() { Name = "Crunchyroll", Regex = "Crunchyroll - Watch (.+) Folge.+", Icon="cr" });
             streams.Add(new StreamingService() { Name = "Anime on Demand", Regex = "(.+) bei Anime on Demand online schauen", Icon="aod" });
@@ -38,6 +40,7 @@ namespace DiscordWatchingAnime
             // MenuItem configMenuItem = new MenuItem("Configuration", new EventHandler(ShowConfig));
             //MenuItem exitMenuItem = new MenuItem("Exit", new EventHandler(Exit));
 
+            /*
             NotifyIcon notifyIcon = new NotifyIcon();
             MenuItem item = new MenuItem("Close");
             item.Click += Item_Click;
@@ -45,7 +48,7 @@ namespace DiscordWatchingAnime
             notifyIcon.ContextMenu = new ContextMenu(new MenuItem[]
               { item });
             notifyIcon.Visible = true;
-
+            */
 
             RichPresence presence = new RichPresence()
             {
@@ -67,6 +70,7 @@ namespace DiscordWatchingAnime
 
                 //CommandInterface(client);
                 PollInterface();
+
             }
 
             /*
@@ -135,6 +139,11 @@ namespace DiscordWatchingAnime
                     }
                 }
             }
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            
         }
     }
 }
