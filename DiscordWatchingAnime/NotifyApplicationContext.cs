@@ -21,6 +21,7 @@ namespace DiscordWatchingAnime
         private List<StreamingService> streams = new List<StreamingService>();
 
         private bool stopRpc = false;
+        private int noStream = 0;
 
         public NotifyApplicationContext()
         {
@@ -133,6 +134,7 @@ namespace DiscordWatchingAnime
                                         if (streamRegex.IsMatch(s))
                                         {
                                             streamFound = true;
+                                            noStream = 0;
 
                                             var c = client.CurrentPresence;
                                             //var test = streamRegex.Match(s);
@@ -149,6 +151,9 @@ namespace DiscordWatchingAnime
                     }
 
                     if (!streamFound)
+                        noStream++;
+
+                    if (noStream > 10)
                     {
                         var c = client.CurrentPresence;
                         //var test = streamRegex.Match(s);
@@ -158,6 +163,7 @@ namespace DiscordWatchingAnime
                         //c.Secrets.SpectateSecret = "http://" + s.Replace("Crunchyroll - Watch ", "");
                         client.SetPresence(c);
                     }
+                    Thread.Sleep(15000);
                 }
 
                 //Close everything
